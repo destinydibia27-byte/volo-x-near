@@ -1,6 +1,6 @@
 /**
  * One-time sanity check that the configured USDC address is a real ERC20 on the
- * RPC you're pointed at, with the symbol/decimals Pulse assumes (USDC, 6).
+ * RPC you're pointed at, with the symbol/decimals Volo assumes (USDC, 6).
  *
  *   ARBITRUM_SEPOLIA_RPC_URL=... USDC_ADDRESS=0x... npx tsx scripts/verify-usdc.ts
  *
@@ -47,7 +47,7 @@ async function main() {
 
   console.log({ address, chainId, symbol, decimals });
   if (symbol !== "USDC") throw new Error(`Unexpected symbol "${symbol}"`);
-  if (decimals !== 6) throw new Error(`Unexpected decimals ${decimals} (Pulse assumes 6)`);
+  if (decimals !== 6) throw new Error(`Unexpected decimals ${decimals} (Volo assumes 6)`);
   console.log("USDC OK");
 }
 

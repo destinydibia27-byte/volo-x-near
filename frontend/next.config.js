@@ -7,7 +7,7 @@ require("@next/env").loadEnvConfig(path.resolve(__dirname, ".."));
 const nextConfig = {
   webpack: (config) => {
     // wagmi's connector barrel transitively imports the Coinbase/Base SDK,
-    // which has optional x402 payment deps we don't use (Pulse only uses the
+    // which has optional x402 payment deps we don't use (Volo only uses the
     // injected browser-wallet connector). Stub them so the build resolves.
     config.resolve.alias = {
       ...config.resolve.alias,

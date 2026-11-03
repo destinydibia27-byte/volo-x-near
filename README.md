@@ -1,4 +1,6 @@
-# Volo
+# Volo x NEAR
+
+> **NEAR HACKATHON submission (Nov 1-14, 2026).** Volo x NEAR is a fork of [Volo](https://github.com/destinydibia27-byte/Volo) that adds NEAR technology. Everything added for the hackathon is listed in [HACKATHON.md](HACKATHON.md). Work on the `near-hackathon` branch.
 
 **Tell it what you want in plain English. A smart contract makes sure it only ever does that.**
 

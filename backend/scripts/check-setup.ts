@@ -64,7 +64,7 @@ async function main() {
         const code = await client.getCode({ address: getAddress(contract) });
         if (!code || code === "0x") say("fail", `No contract at ${contract} on this chain. Did the deploy succeed, and is this the right address?`);
         else {
-          say("ok", "Pulse contract found.");
+          say("ok", "Volo contract found.");
           if (executor) {
             const onChain = await client.readContract({ address: getAddress(contract), abi: PULSE_ABI, functionName: "executor" });
             if (onChain.toLowerCase() !== executor.toLowerCase())
@@ -91,7 +91,7 @@ async function main() {
               client.readContract({ address: getAddress(usdc), abi, functionName: "symbol" }),
               client.readContract({ address: getAddress(usdc), abi, functionName: "decimals" }),
             ]);
-            if (sym !== "USDC" || dec !== 6) say("fail", `Token at ${usdc} reports symbol "${sym}" and ${dec} decimals; Pulse needs USDC with 6.`);
+            if (sym !== "USDC" || dec !== 6) say("fail", `Token at ${usdc} reports symbol "${sym}" and ${dec} decimals; Volo needs USDC with 6.`);
             else say("ok", "USDC token looks right (symbol USDC, 6 decimals).");
           }
         }
