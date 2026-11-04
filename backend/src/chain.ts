@@ -8,6 +8,14 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { arbitrumSepolia } from "viem/chains";
 import { PULSE_ABI, ERC20_ABI } from "./abi";
+import {
+  DEFAULT_DERIVATION_PATH,
+  createMpcDigestSigner,
+  createNearViemAccount,
+  deriveExecutorAddress,
+  type DigestSigner,
+  type NearNetwork,
+} from "./nearExecutor";
 
 /**
  * Thin wrapper around the PulseAutomation contract. The wallet used here
@@ -45,8 +53,47 @@ export async function readAllowance(owner: Address, asset: Address): Promise<big
   });
 }
 
+/**
+ * How the worker signs: "key" (default) uses EXECUTOR_PRIVATE_KEY; "near" derives the executor
+ * address from a NEAR account and has NEAR's MPC network sign every transaction (Chain
+ * Signatures), so no EVM private key for the executor exists.
+ */
+export function executorMode(): "key" | "near" {
+  return process.env.EXECUTOR_MODE === "near" ? "near" : "key";
+}
+
+function nearConfig() {
+  const network = (process.env.NEAR_NETWORK || "testnet") as NearNetwork;
+  if (network !== "testnet" && network !== "mainnet") throw new Error(`NEAR_NETWORK must be testnet or mainnet, got ${network}`);
+  return {
+    nearAccountId: requireEnv("NEAR_ACCOUNT_ID"),
+    path: process.env.NEAR_DERIVATION_PATH || DEFAULT_DERIVATION_PATH,
+    network,
+  };
+}
+
 export function executorAccountAddress(): Address {
+  if (executorMode() === "near") {
+    const c = nearConfig();
+    return deriveExecutorAddress(c.nearAccountId, c.path, c.network);
+  }
   return privateKeyToAccount(requireEnv("EXECUTOR_PRIVATE_KEY") as `0x${string}`).address;
+}
+
+let mpcSigner: DigestSigner | undefined;
+function executorAccount() {
+  if (executorMode() === "near") {
+    const c = nearConfig();
+    mpcSigner ??= createMpcDigestSigner({
+      nearAccountId: c.nearAccountId,
+      nearSecretKey: requireEnv("NEAR_PRIVATE_KEY"),
+      network: c.network,
+      path: c.path,
+      rpcUrl: process.env.NEAR_RPC_URL || undefined,
+    });
+    return createNearViemAccount({ address: executorAccountAddress(), signDigest: mpcSigner });
+  }
+  return privateKeyToAccount(requireEnv("EXECUTOR_PRIVATE_KEY") as `0x${string}`);
 }
 
 export async function readContractExecutor(): Promise<Address> {
@@ -58,14 +105,13 @@ export async function readContractExecutor(): Promise<Address> {
 export function getClients() {
   const rpcUrl = requireEnv("ARBITRUM_SEPOLIA_RPC_URL");
   const contractAddress = requireEnv("PULSE_CONTRACT_ADDRESS") as Address;
-  const executorKey = requireEnv("EXECUTOR_PRIVATE_KEY") as `0x${string}`;
 
   const publicClient = createPublicClient({
     chain: arbitrumSepolia,
     transport: http(rpcUrl),
   });
 
-  const account = privateKeyToAccount(executorKey);
+  const account = executorAccount();
   const walletClient = createWalletClient({
     account,
     chain: arbitrumSepolia,

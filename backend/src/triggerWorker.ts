@@ -29,6 +29,7 @@ import type { Address } from "viem";
 import {
   attemptExecution,
   executorAccountAddress,
+  executorMode,
   ExecutionUncertainError,
   getPublicClient,
   readAllowance,
@@ -221,8 +222,9 @@ async function preflight(): Promise<void> {
   const [onChain, mine] = [await readContractExecutor(), executorAccountAddress()];
   if (onChain.toLowerCase() !== mine.toLowerCase()) {
     throw new Error(
-      `EXECUTOR_PRIVATE_KEY controls ${mine}, but the contract's executor is ${onChain}. ` +
-        `Every execute() call would fail.`
+      `The worker signs as ${mine} (${executorMode() === "near" ? "derived from NEAR_ACCOUNT_ID + NEAR_DERIVATION_PATH" : "EXECUTOR_PRIVATE_KEY"}), ` +
+        `but the contract's executor is ${onChain}. Every execute() call would fail. ` +
+        `The contract owner can fix this with setExecutor(${mine}).`
     );
   }
 }
